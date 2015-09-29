@@ -142,7 +142,7 @@ function updateMilestones(auth){
 			console.log('Problem getting repos :' + err);
 		}else{
 		for(var i=0; i<res.length; i++){
-		if(res[i].owner.id == 12403071){
+		if(res[i].owner.login == config.user){
 			github.issues.getAllMilestones({
 				user : config.user,
 				repo : res[i].name
