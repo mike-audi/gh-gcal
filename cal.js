@@ -107,10 +107,12 @@ function makeEvent(stone,auth){
 	dstart.setUTCHours(4);
 	var dend = new Date(dstart);
 	dend.setDate(dend.getDate()+1);
+	console.log('Making Event: ' + stone.title);
 	calendar.events.insert({
 		auth: auth,
 		calendarId: config.cal,
 		resource: {
+			source: {"url":stone.url},
 			end: {"dateTime": dend.toJSON()},
 			start: {"dateTime": dstart.toJSON()},
 			description: stone.description,
@@ -122,6 +124,7 @@ function makeEvent(stone,auth){
 			console.log('Couldnt Make ' + JSON.stringify(stone) +  err);
 			return;
 		}
+		//console.log(response);
 	});
 }
 
@@ -153,10 +156,8 @@ function updateMilestones(auth){
 				for(var i=0; i<stones.length; i++){
 					getEvents(stones[i],auth,function(pass,evn,stone){
 						if(pass){
-							console.log('Updating: ' + stone.title);
 							updateEvent(stone,evn,auth);
 						}else{
-							console.log('Making Event: ' + stone.title);
 							makeEvent(stone,auth);
 						}
 					});
@@ -176,7 +177,7 @@ function getEvents(stone, auth, callback){
 			console.log("Get error: " + err);
 		}else{
 			for(var j=0; j<list.items.length; j++){
-				if(list.items[j].summary == stone.title){
+				if(list.items[j].source.url == stone.url){
 					callback(true,list.items[j],stone);
 					return;
 				}
@@ -187,27 +188,37 @@ function getEvents(stone, auth, callback){
 	});
 }
 
-function updateEvent(obj, env, auth){
+function updateEvent(stone, env, auth){
 	var calendar = google.calendar('v3');
-	var dstart = new Date(obj.due_on);
+	var dstart = new Date(stone.due_on);
 	dstart.setUTCHours(4);
 	var dend = new Date(dstart);
 	dend.setDate(dend.getDate()+1);
-
-	calendar.events.update({
-		auth: auth,
-		calendarId: config.cal,
-		eventId: env.id,
-		resource:{
-			description: obj.description,
-			summary: obj.title,
-			start:{"dateTime":dstart.toJSON()},
-			end:{"dateTime":dend.toJSON()},
-			location:obj.html_url
-		}
-	},function(err,res){
-		if(err){
-			console.log("update error: " + err);
-		}
-	});
+	var dcmp1 = new Date(env.start.dateTime);
+	
+	if((+dstart === +dcmp1) &&
+	   (env.description == stone.description) &&
+	   (env.summary == stone.title) &&
+	   (env.location == stone.html_url)){
+		console.log('No change to: ' + stone.title);
+	}else{
+		console.log('Updating: ' + stone.title);
+		calendar.events.update({
+			auth: auth,
+			calendarId: config.cal,
+			eventId: env.id,
+			resource:{
+				source: {"url":stone.url},
+				description: stone.description,
+				summary: stone.title,
+				start:{"dateTime":dstart.toJSON()},
+				end:{"dateTime":dend.toJSON()},
+				location:stone.html_url
+			}
+		},function(err,res){
+			if(err){
+				console.log("update error: " + err);
+			}
+		});
+	}
 }	
