@@ -113,8 +113,8 @@ function makeEvent(stone,auth){
 		calendarId: config.cal,
 		resource: {
 			source: {"url":stone.url},
-			end: {"dateTime": dend.toJSON()},
-			start: {"dateTime": dstart.toJSON()},
+			end: {"date": dend.toJSON().slice(0,10)},
+			start: {"date": dstart.toJSON().slice(0,10)},
 			description: stone.description,
 			summary: stone.title,
 			location: stone.html_url
@@ -194,9 +194,8 @@ function updateEvent(stone, env, auth){
 	dstart.setUTCHours(4);
 	var dend = new Date(dstart);
 	dend.setDate(dend.getDate()+1);
-	var dcmp1 = new Date(env.start.dateTime);
-	
-	if((+dstart === +dcmp1) &&
+
+	if((dstart.toJSON().slice(0,10) == env.start.date) &&
 	   (env.description == stone.description) &&
 	   (env.summary == stone.title) &&
 	   (env.location == stone.html_url)){
@@ -211,8 +210,8 @@ function updateEvent(stone, env, auth){
 				source: {"url":stone.url},
 				description: stone.description,
 				summary: stone.title,
-				start:{"dateTime":dstart.toJSON()},
-				end:{"dateTime":dend.toJSON()},
+				start:{"date":dstart.toJSON().slice(0,10)},
+				end:{"date":dend.toJSON().slice(0,10)},
 				location:stone.html_url
 			}
 		},function(err,res){
